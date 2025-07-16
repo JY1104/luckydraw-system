@@ -1,0 +1,145 @@
+// ============================
+// 🔧 Admin Panel Script
+// ============================
+
+// 接收来自 index.html 的消息（例如名字重复时的提醒）
+window.addEventListener("message", (event) => {
+  const { type, payload } = event.data;
+  if (type === "nameDuplicate") {
+    const warningEl = document.getElementById("duplicateWarning");
+    if (warningEl) {
+      warningEl.textContent = `⚠️ 名字 "${payload}" 已存在！`;
+      setTimeout(() => (warningEl.textContent = ""), 3000);
+    }
+  }
+});
+
+let autoSpinEnabled = true;
+
+// 📤 向 index.html 发送消息
+function sendMessage(type, payload) {
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({ type, payload }, "*");
+  } else {
+    alert("请从 index.html 打开此页面！");
+  }
+}
+
+// ============================
+// 🎯 控制按钮功能区
+// ============================
+
+function sendInsertName() {
+  const name = document.getElementById("nameInput").value.trim();
+  const warningEl = document.getElementById("duplicateWarning");
+
+  if (!name) {
+    warningEl.textContent = "⚠️ 请输入名字！";
+    setTimeout(() => (warningEl.textContent = ""), 3000);
+    return;
+  }
+
+  sendMessage("insertName", name);
+  document.getElementById("nameInput").value = "";
+}
+
+
+
+function sendRemoveAllNames() {
+  if (confirm("确认清除所有名字？")) {
+    sendMessage("removeAllNames");
+  }
+}
+
+function handleNameFile() {
+  const file = document.getElementById("nameListUpload").files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const lines = e.target.result
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    sendMessage("uploadNameList", lines);
+  };
+  reader.readAsText(file);
+}
+
+function sendExportNames() {
+  sendMessage("requestNameExport");
+}
+
+function sendClearWinners() {
+  if (confirm("确认清除中奖名单？")) {
+    sendMessage("clearWinners");
+  }
+}
+
+function sendSetTitle() {
+  const title = document.getElementById("titleInput").value.trim();
+  if (title) sendMessage("setTitle", title);
+}
+
+document.getElementById("titleInput").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    sendSetTitle(); // ✅ 只处理标题
+  }
+});
+
+document.getElementById("nameInput").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    sendInsertName(); // ✅ 只处理名字
+  }
+});
+
+
+function sendTitleColor() {
+  const color = document.getElementById("titleColorInput").value;
+  sendMessage("setTitleColor", color);
+}
+
+function sendWinnerColor() {
+  const color = document.getElementById("winnerColorInput").value;
+  sendMessage("setWinnerColor", color);
+}
+
+function sendVolume() {
+  const vol = parseFloat(document.getElementById("volumeSlider").value);
+  if (!isNaN(vol)) sendMessage("setVolume", vol);
+}
+
+function handleBgUpload() {
+  const file = document.getElementById("bgUpload").files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    sendMessage("setBackground", e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function sendSpin() {
+  sendMessage("spinNow");
+}
+
+function toggleAutoSpin() {
+  autoSpinEnabled = !autoSpinEnabled;
+  sendMessage(autoSpinEnabled ? "startAutoSpin" : "stopAutoSpin");
+}
+
+function toggleMusicRemote() {
+  sendMessage("toggleMusic");
+}
+
+function sendFlashOffset() {
+  const x = parseInt(document.getElementById("flashPosX").value);
+  const y = parseInt(document.getElementById("flashPosY").value);
+  if (!isNaN(x) && !isNaN(y)) {
+    sendMessage("setFlashOffset", { x, y });
+  }
+}
+
+function sendFlashColor() {
+  const color = document.getElementById("flashColorInput").value;
+  sendMessage("setFlashColor", color);
+}
