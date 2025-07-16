@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lucky Draw Admin Panel</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+      max-width: 600px;
+      margin: auto;
+    }
+    input, button, label {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .danger {
+      background-color: #dc3545;
+    }
+    .secondary {
+      background-color: #6c757d;
+    }
+	
+	input[type="range"] {
+	  width: 100%;
+	  height: 6px;
+	  appearance: none;
+	  background: #28a745;
+	  border-radius: 3px;
+	  outline: none;
+	}
+
+	input[type="range"]::-webkit-slider-thumb {
+	  appearance: none;
+	  width: 14px;
+	  height: 14px;
+	  border-radius: 50%;
+	  background: #fff;
+	  border: 2px solid #28a745;
+	  cursor: pointer;
+	  margin-top: -4px;
+	}
+
+  </style>
+</head>
+<body>
+  <h2>🎛️ Lucky Draw Admin Panel</h2>
+
+  <!-- 插入新名字 -->
+	<label>插入名字</label>
+	<input id="nameInput" placeholder="输入名字" onkeydown="if (event.key === 'Enter') sendInsertName()" />
+	<button onclick="sendInsertName()">插入</button>
+	<div id="duplicateWarning" style="color: red; font-weight: bold;"></div>
+
+
+  <!-- 清除所有名字 -->
+  <button class="danger" onclick="sendRemoveAllNames()">清空所有名字</button>
+
+  <!-- 上传名字列表 -->
+  <label>上传名单 (.txt)</label>
+  <input type="file" id="nameListUpload" accept=".txt" onchange="handleNameFile()" />
+
+  <!-- 导出当前名单 -->
+  <button onclick="sendExportNames()">导出名单</button>
+
+  <!-- 清除中奖名单 -->
+  <button class="danger" onclick="sendClearWinners()">清空中奖者</button>
+
+  <!-- 设置标题 -->
+  <label>设置标题</label>
+  <input id="titleInput" placeholder="输入标题" />
+  <button onclick="sendSetTitle()">更新标题</button>
+
+  <!-- 设置标题颜色 -->
+  <label>标题颜色</label>
+  <input type="color" id="titleColorInput" onchange="sendTitleColor()" />
+
+  <!-- 设置 Winner List 字体颜色 -->
+  <label>Winner List 字体颜色</label>
+  <input type="color" id="winnerColorInput" onchange="sendWinnerColor()" />
+
+  <!-- 音量控制 -->
+  <label>背景音乐音量</label>
+  <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" onchange="sendVolume()" />
+
+  <!-- 设置背景图 -->
+  <label>上传背景图片</label>
+  <input type="file" id="bgUpload" accept="image/*" onchange="handleBgUpload()" />
+  
+  <hr />
+	<h3>👥 当前名单</h3>
+	<ul id="userListDisplay" style="padding-left: 20px;"></ul>
+	<button onclick="requestUserList()">🔄 刷新名单</button>
+
+
+  <!-- 新增控制 -->
+  <hr />
+  <button onclick="sendSpin()">🎯 开始抽奖</button>
+  <button class="secondary" onclick="toggleAutoSpin()">🔄 自动旋转 On/Off</button>
+  <button class="secondary" onclick="toggleMusicRemote()">🔊 播放 / 暂停音乐</button>
+
+  <script>
+ 
+	  // 接收来自 index.html 的消息
+	  window.addEventListener("message", (event) => {
+		const { type, payload } = event.data;
+		if (type === "nameDuplicate") {
+		  const warningEl = document.getElementById("duplicateWarning");
+		  warningEl.textContent = `⚠️ 名字 "${payload}" 已存在！`;
+		  // 3秒后自动清除
+		  setTimeout(() => {
+			warningEl.textContent = "";
+		  }, 3000);
+		}
+	  });
+
+    let autoSpinEnabled = true;
+
+    function sendMessage(type, payload) {
+      if (window.opener) {
+        window.opener.postMessage({ type, payload }, "*");
+      } else {
+        alert("请从 index.html 点击按钮打开本页面");
+      }
+    }
+
+    function sendInsertName() {
+      const name = document.getElementById("nameInput").value.trim();
+      if (name) {
+        sendMessage("insertName", name);
+        document.getElementById("nameInput").value = "";
+      }
+    }
+
+    function sendRemoveAllNames() {
+      if (confirm("确认清除所有名字？")) {
+        sendMessage("removeAllNames");
+      }
+    }
+
+    function handleNameFile() {
+      const file = document.getElementById("nameListUpload").files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const lines = e.target.result.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        sendMessage("uploadNameList", lines);
+      };
+      reader.readAsText(file);
+    }
+
+    function sendExportNames() {
+      sendMessage("requestNameExport");
+    }
+
+    function sendClearWinners() {
+      if (confirm("确认清除中奖名单？")) {
+        sendMessage("clearWinners");
+      }
+    }
+
+    function sendSetTitle() {
+      const title = document.getElementById("titleInput").value.trim();
+      if (title) sendMessage("setTitle", title);
+    }
+	 document.getElementById("titleInput").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      sendSetTitle();
+    }
+	});
+
+    function sendTitleColor() {
+      const color = document.getElementById("titleColorInput").value;
+      sendMessage("setTitleColor", color);
+    }
+
+    function sendWinnerColor() {
+      const color = document.getElementById("winnerColorInput").value;
+      sendMessage("setWinnerColor", color);
+    }
+
+    function sendVolume() {
+      const vol = parseFloat(document.getElementById("volumeSlider").value);
+      sendMessage("setVolume", vol);
+    }
+
+    function handleBgUpload() {
+      const file = document.getElementById("bgUpload").files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        sendMessage("setBackground", e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function sendSpin() {
+      sendMessage("spinNow");
+    }
+
+    function toggleAutoSpin() {
+      autoSpinEnabled = !autoSpinEnabled;
+      sendMessage(autoSpinEnabled ? "startAutoSpin" : "stopAutoSpin");
+    }
+
+    function toggleMusicRemote() {
+      sendMessage("toggleMusic");
+    }
+
+  </script>
+</body>
+</html>
