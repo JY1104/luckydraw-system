@@ -428,3 +428,25 @@ button:hover, .export-btn:hover {
   }
 }
 
+.sound-settings {
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 16px;
+  backdrop-filter: blur(8px);
+}
+
+.sound-settings h3 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.sound-settings label {
+  font-weight: bold;
+  color: #fff;
+}
+
+.sound-settings input[type="range"] {
+  width: 100%;
+}
+
+
