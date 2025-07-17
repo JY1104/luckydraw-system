@@ -7,20 +7,22 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <button class="admin-toggle-btn" onclick="window.open('admin.html', 'AdminPanel', 'width=500,height=700')">🔧 Admin Panel</button>
+  <button class="admin-toggle-btn" onclick="openAdminWindow()">🔧 Admin Panel</button>
 
   <header class="main-header">
     <h1>Lucky Draw Flash</h1>
   </header>
 
-  <div class="winner-container">
-    <div id="winner-list">
-      <h3>🎉 Winner List</h3>
-      <ul></ul>
-    </div>
+  <div class="winner-container" id="winner-list">
+    <h3>🎉 Winner List</h3>
+    <ul></ul>
   </div>
 
   <div id="flashNameDisplay">点击开始抽奖</div>
+
+  <audio id="bgMusic" loop>
+    <source src="music/background.mp3" type="audio/mpeg" />
+  </audio>
 
   <div id="customPopup" class="popup hidden">
     <div class="popup-content">
@@ -34,5 +36,87 @@
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="script.js"></script>
+
+  <script>
+    let adminWindow = null;
+    function openAdminWindow() {
+      if (adminWindow && !adminWindow.closed) {
+        adminWindow.focus();
+      } else {
+        adminWindow = window.open('admin.html', 'AdminPanel', 'width=500,height=700');
+      }
+    }
+
+    // 拖动逻辑：flashNameDisplay
+    const flashEl = document.getElementById("flashNameDisplay");
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    flashEl.addEventListener("mousedown", function (e) {
+      if (localStorage.getItem("lockFlash") === "true") return; // 锁定时不允许拖动
+      isDragging = true;
+      const rect = flashEl.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+    });
+
+    document.addEventListener("mousemove", function (e) {
+      if (isDragging) {
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        flashEl.style.position = "absolute";
+        flashEl.style.left = x + "px";
+        flashEl.style.top = y + "px";
+
+        localStorage.setItem("flashOffsetX", x);
+        localStorage.setItem("flashOffsetY", y);
+
+        // 实时发给 admin panel
+        if (adminWindow && !adminWindow.closed) {
+          adminWindow.postMessage({ type: "flashMoved", payload: { x, y } }, "*");
+        }
+      }
+    });
+
+    document.addEventListener("mouseup", function () {
+      isDragging = false;
+    });
+	
+	// 拖动逻辑：winner-list
+  const winnerEl = document.getElementById("winner-list");
+  let draggingWinner = false;
+  let offsetWinnerX = 0;
+  let offsetWinnerY = 0;
+
+  winnerEl.addEventListener("mousedown", function (e) {
+    if (localStorage.getItem("lockWinner") === "true") return; // 锁定时不允许拖动
+    draggingWinner = true;
+    const rect = winnerEl.getBoundingClientRect();
+    offsetWinnerX = e.clientX - rect.left;
+    offsetWinnerY = e.clientY - rect.top;
+  });
+
+  document.addEventListener("mousemove", function (e) {
+    if (draggingWinner) {
+      const x = e.clientX - offsetWinnerX;
+      const y = e.clientY - offsetWinnerY;
+      winnerEl.style.position = "absolute";
+      winnerEl.style.left = x + "px";
+      winnerEl.style.top = y + "px";
+
+      localStorage.setItem("winnerOffsetX", x);
+      localStorage.setItem("winnerOffsetY", y);
+
+      if (adminWindow && !adminWindow.closed) {
+        adminWindow.postMessage({ type: "winnerMoved", payload: { x, y } }, "*");
+      }
+    }
+  });
+
+  document.addEventListener("mouseup", function () {
+    draggingWinner = false;
+  });
+  </script>
 </body>
 </html>
