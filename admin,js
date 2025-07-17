@@ -2,9 +2,10 @@
 // 🔧 Admin Panel Script
 // ============================
 
-// 接收来自 index.html 的消息（例如名字重复时的提醒）
+// 接收来自 index.html 的消息（例如名字重复或拖动坐标）
 window.addEventListener("message", (event) => {
   const { type, payload } = event.data;
+
   if (type === "nameDuplicate") {
     const warningEl = document.getElementById("duplicateWarning");
     if (warningEl) {
@@ -12,11 +13,20 @@ window.addEventListener("message", (event) => {
       setTimeout(() => (warningEl.textContent = ""), 3000);
     }
   }
+
+  if (type === "flashMoved" && payload) {
+    document.getElementById("flashPosX").value = payload.x;
+    document.getElementById("flashPosY").value = payload.y;
+  }
+
+  if (type === "winnerMoved" && payload) {
+    document.getElementById("winnerPosX").value = payload.x;
+    document.getElementById("winnerPosY").value = payload.y;
+  }
 });
 
 let autoSpinEnabled = true;
 
-// 📤 向 index.html 发送消息
 function sendMessage(type, payload) {
   if (window.opener && !window.opener.closed) {
     window.opener.postMessage({ type, payload }, "*");
@@ -25,10 +35,7 @@ function sendMessage(type, payload) {
   }
 }
 
-// ============================
-// 🎯 控制按钮功能区
-// ============================
-
+// 插入名字
 function sendInsertName() {
   const name = document.getElementById("nameInput").value.trim();
   const warningEl = document.getElementById("duplicateWarning");
@@ -43,14 +50,14 @@ function sendInsertName() {
   document.getElementById("nameInput").value = "";
 }
 
-
-
+// 清空所有名字
 function sendRemoveAllNames() {
   if (confirm("确认清除所有名字？")) {
     sendMessage("removeAllNames");
   }
 }
 
+// 导入名单文件
 function handleNameFile() {
   const file = document.getElementById("nameListUpload").files[0];
   if (!file) return;
@@ -65,49 +72,43 @@ function handleNameFile() {
   reader.readAsText(file);
 }
 
+// 导出名单
 function sendExportNames() {
   sendMessage("requestNameExport");
 }
 
+// 清空中奖名单
 function sendClearWinners() {
   if (confirm("确认清除中奖名单？")) {
     sendMessage("clearWinners");
   }
 }
 
+// 设置标题
 function sendSetTitle() {
   const title = document.getElementById("titleInput").value.trim();
   if (title) sendMessage("setTitle", title);
 }
 
-document.getElementById("titleInput").addEventListener("keydown", function (event) {
-  if (event.key === "Enter") {
-    sendSetTitle(); // ✅ 只处理标题
-  }
-});
-
-document.getElementById("nameInput").addEventListener("keydown", function (event) {
-  if (event.key === "Enter") {
-    sendInsertName(); // ✅ 只处理名字
-  }
-});
-
-
+// 设置标题颜色
 function sendTitleColor() {
   const color = document.getElementById("titleColorInput").value;
   sendMessage("setTitleColor", color);
 }
 
+// 设置中奖名单字体颜色
 function sendWinnerColor() {
   const color = document.getElementById("winnerColorInput").value;
   sendMessage("setWinnerColor", color);
 }
 
+// 设置背景音乐音量
 function sendVolume() {
   const vol = parseFloat(document.getElementById("volumeSlider").value);
   if (!isNaN(vol)) sendMessage("setVolume", vol);
 }
 
+// 设置背景图片
 function handleBgUpload() {
   const file = document.getElementById("bgUpload").files[0];
   if (!file) return;
@@ -118,28 +119,64 @@ function handleBgUpload() {
   reader.readAsDataURL(file);
 }
 
+// 手动抽奖
 function sendSpin() {
   sendMessage("spinNow");
 }
 
-function toggleAutoSpin() {
-  autoSpinEnabled = !autoSpinEnabled;
-  sendMessage(autoSpinEnabled ? "startAutoSpin" : "stopAutoSpin");
-}
-
+// 开关背景音乐
 function toggleMusicRemote() {
   sendMessage("toggleMusic");
 }
 
-function sendFlashOffset() {
-  const x = parseInt(document.getElementById("flashPosX").value);
-  const y = parseInt(document.getElementById("flashPosY").value);
-  if (!isNaN(x) && !isNaN(y)) {
-    sendMessage("setFlashOffset", { x, y });
-  }
-}
-
+// 设置 Flash 名字颜色
 function sendFlashColor() {
   const color = document.getElementById("flashColorInput").value;
   sendMessage("setFlashColor", color);
 }
+
+// 切换 Flash 名字是否锁定拖动
+function toggleFlashLock() {
+  const lockBtn = document.getElementById("flashLockBtn");
+  const isLocked = localStorage.getItem("lockFlash") === "true";
+  const newState = !isLocked;
+
+  localStorage.setItem("lockFlash", newState);
+  lockBtn.textContent = newState ? "🔒 已锁定 Flash 位置" : "🔓 解锁 Flash 位置";
+}
+
+// 切换 Winner List 是否锁定拖动
+function toggleWinnerLock() {
+  const lockBtn = document.getElementById("winnerLockBtn");
+  const isLocked = localStorage.getItem("lockWinner") === "true";
+  const newState = !isLocked;
+
+  localStorage.setItem("lockWinner", newState);
+  lockBtn.textContent = newState ? "🔒 已锁定 Winner List" : "🔓 解锁 Winner List";
+}
+
+// 初始化状态（锁定按钮）
+window.addEventListener("DOMContentLoaded", () => {
+  const flashLocked = localStorage.getItem("lockFlash") === "true";
+  const winnerLocked = localStorage.getItem("lockWinner") === "true";
+
+  document.getElementById("flashLockBtn").textContent = flashLocked
+    ? "🔒 已锁定 Flash 位置"
+    : "🔓 解锁 Flash 位置";
+
+  document.getElementById("winnerLockBtn").textContent = winnerLocked
+    ? "🔒 已锁定 Winner List"
+    : "🔓 解锁 Winner List";
+});
+
+// 监听 Enter 键
+document.getElementById("titleInput").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    sendSetTitle();
+  }
+});
+document.getElementById("nameInput").addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    sendInsertName();
+  }
+});
