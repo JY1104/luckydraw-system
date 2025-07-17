@@ -6,29 +6,23 @@
   <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
-  <h1>🎛️ Lucky Draw Admin Panel</h1>
+  <h2>🎛️ Admin Panel</h2>
 
   <div class="section">
-    <label>✏️ 输入新名字 (按 Enter 添加):</label>
-    <input type="text" id="nameInput" placeholder="输入名字后按 Enter" />
+    <label for="nameInput">👤 添加名字</label>
+    <input type="text" id="nameInput" placeholder="输入名字按 Enter 添加" />
     <div id="duplicateWarning" class="warning"></div>
   </div>
 
   <div class="section">
-    <label>📤 导入名单 (.txt，每行一个名字):</label>
+    <button onclick="sendRemoveAllNames()">🗑️ 清除全部名字</button>
     <input type="file" id="nameListUpload" accept=".txt" onchange="handleNameFile()" />
+    <button onclick="sendExportNames()">📤 导出名单</button>
   </div>
-
-  <div class="section btn-row">
-    <button onclick="sendRemoveAllNames()">🧹 清空名单</button>
-    <button onclick="sendExportNames()">📄 导出名单</button>
-  </div>
-
-  <hr />
 
   <div class="section">
-    <label>🏷️ 页面标题:</label>
-    <input type="text" id="titleInput" placeholder="输入标题" />
+    <label>📝 页面标题</label>
+    <input type="text" id="titleInput" placeholder="输入标题文字后按 Enter" />
   </div>
 
   <div class="section">
@@ -42,29 +36,27 @@
   </div>
 
   <div class="section">
-    <label>✨ Flash 名字字体颜色:</label>
+    <label>✨ 抽奖字体颜色:</label>
     <input type="color" id="flashColorInput" oninput="sendFlashColor()" />
-  </div>
-
-  <div class="section">
-    <label>📍 Flash 名字位置:</label>
-    <div class="pos-group">
-      X: <input type="number" id="flashPosX" value="100" />
-      Y: <input type="number" id="flashPosY" value="200" />
-      <button onclick="sendFlashOffset()">更新位置</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <label>🖼️ 上传背景图:</label>
-    <input type="file" id="bgUpload" accept="image/*" onchange="handleBgUpload()" />
   </div>
 
   <hr />
 
   <div class="section">
-    <button onclick="sendClearWinners()">🧽 清空中奖名单</button>
-    <button onclick="sendSpin()">🎯 开始抽奖</button>
+    <h3>🧲 抽奖文字位置</h3>
+    <button onclick="toggleFlashLock()" id="flashLockBtn">🔓 解锁</button>
+  </div>
+
+  <div class="section">
+    <h3>🧲 Winner List 位置</h3>
+    <button onclick="toggleWinnerLock()" id="winnerLockBtn">🔓 解锁</button>
+  </div>
+
+  <hr />
+
+  <div class="section">
+    <button onclick="sendClearWinners()">🧹 清除中奖名单</button>
+    <button onclick="sendSpin()">🎲 开始抽奖</button>
   </div>
 
   <script src="admin.js"></script>
