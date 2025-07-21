@@ -12,13 +12,6 @@ let spinSound = null;
   updateUserList();
   updateWinnerList();
 
-  // 标题颜色
-  const savedTitle = localStorage.getItem("pageTitle");
-  const titleEl = document.querySelector(".main-header h1");
-  if (savedTitle) titleEl.textContent = savedTitle;
-  const savedTitleColor = localStorage.getItem("titleColor");
-  if (savedTitleColor) titleEl.style.color = savedTitleColor;
-
   // Winner List 字体颜色
   const winnerList = document.getElementById("winner-list");
   const winnerColor = localStorage.getItem("winnerFontColor");
@@ -189,9 +182,20 @@ function exportNames() {
 // 消息监听
 window.addEventListener("message", (event) => {
   const { type, payload } = event.data;
+  const flashContainer = document.getElementById("flashContainer");
   const flashEl = document.getElementById("flashNameDisplay");
   const titleEl = document.querySelector(".main-header h1");
   const winnerListEl = document.getElementById("winner-list");
+
+	// 替换位置还原逻辑
+	const fx = localStorage.getItem("flashOffsetX");
+	const fy = localStorage.getItem("flashOffsetY");
+	if (fx && fy) {
+	  flashContainer.style.position = "absolute";
+	  flashContainer.style.left = `${fx}px`;
+	  flashContainer.style.top = `${fy}px`;
+	}
+  
 
   switch (type) {
     case "insertName":
@@ -230,20 +234,6 @@ window.addEventListener("message", (event) => {
       updateWinnerList();
       break;
 
-    case "setTitle":
-      if (titleEl && payload.trim()) {
-        titleEl.textContent = payload;
-        localStorage.setItem("pageTitle", payload);
-      }
-      break;
-
-    case "setTitleColor":
-      if (titleEl) {
-        titleEl.style.color = payload;
-        localStorage.setItem("titleColor", payload);
-      }
-      break;
-
     case "setWinnerColor":
       if (winnerListEl) {
         winnerListEl.style.color = payload;
@@ -253,22 +243,23 @@ window.addEventListener("message", (event) => {
       }
       break;
 
-    case "setFlashOffset":
-      if (flashEl) {
-        flashEl.style.position = "absolute";
-        flashEl.style.left = `${payload.x}px`;
-        flashEl.style.top = `${payload.y}px`;
-        localStorage.setItem("flashOffsetX", payload.x);
-        localStorage.setItem("flashOffsetY", payload.y);
-      }
-      break;
+	case "setFlashOffset":
+	  if (flashContainer) {
+		flashContainer.style.position = "absolute";
+		flashContainer.style.left = `${payload.x}px`;
+		flashContainer.style.top = `${payload.y}px`;
+		localStorage.setItem("flashOffsetX", payload.x);
+		localStorage.setItem("flashOffsetY", payload.y);
+	  }
+	  break;
+
 
     case "setFlashColor":
       if (flashEl) {
         flashEl.style.color = payload;
         localStorage.setItem("flashColor", payload);
       }
-      break;
+    break;
 
     case "setBackground":
       document.body.style.backgroundImage = `url(${payload})`;
@@ -277,11 +268,12 @@ window.addEventListener("message", (event) => {
       document.body.style.backgroundPosition = "center";
       document.body.style.backgroundAttachment = "fixed";
       localStorage.setItem("bgImage", payload);
-      break;
+    break;
 
     case "spinNow":
       flashRandomNameDraw();
-      break;
+    break;
+	  
 
     default:
       console.warn("⚠️ 未知指令类型：", type);
