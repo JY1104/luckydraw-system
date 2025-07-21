@@ -3,69 +3,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lucky Draw Admin Panel</title>
-  <link rel="stylesheet" href="admin.css" />
+  <title>Lucky Draw Flash</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>🎛️ Admin Panel</h2>
+  <button class="admin-toggle-btn" onclick="openAdminWindow()">🔧</button>
 
-	<h3>📄 名单管理</h3>
-  <div class="section">
-    <label for="nameInput">👤 添加名字</label>
-    <input type="text" id="nameInput" placeholder="输入名字按 Enter 添加" />
-    <div id="duplicateWarning" class="warning"></div>
+  <header class="main-header">
+    <h1>Lucky Draw Flash</h1>
+  </header>
+
+  <div class="winner-container" id="winner-list">
+    <h3>🎉 Winner List</h3>
+    <ul></ul>
   </div>
+
+  <div id="flashContainer">
+	<div id="flashNameDisplay">幸运儿</div>
+  </div>
+
+
+  <div id="customPopup" class="popup hidden">
+    <div class="popup-content">
+      <h2>🎯 Winner!</h2>
+      <p id="winnerNameDisplay"></p>
+      <button onclick="closePopup()">OK</button>
+    </div>
+  </div>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    let adminWindow = null;
+    function openAdminWindow() {
+      if (adminWindow && !adminWindow.closed) {
+        adminWindow.focus();
+      } else {
+        adminWindow = window.open('admin.html', 'AdminPanel', 'width=500,height=700');
+      }
+    }
+
+    // 拖动逻辑：flashNameDisplay
+    const flashEl = document.getElementById("flashNameDisplay");
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    flashEl.addEventListener("mousedown", function (e) {
+      if (localStorage.getItem("lockFlash") === "true") return; // 锁定时不允许拖动
+      isDragging = true;
+      const rect = flashEl.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+    });
+
+    document.addEventListener("mousemove", function (e) {
+      if (isDragging) {
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        flashEl.style.position = "absolute";
+        flashEl.style.left = x + "px";
+        flashEl.style.top = y + "px";
+
+        localStorage.setItem("flashOffsetX", x);
+        localStorage.setItem("flashOffsetY", y);
+
+        // 实时发给 admin panel
+        if (adminWindow && !adminWindow.closed) {
+          adminWindow.postMessage({ type: "flashMoved", payload: { x, y } }, "*");
+        }
+      }
+    });
+
+    document.addEventListener("mouseup", function () {
+      isDragging = false;
+    });
+	
+	// 拖动逻辑：winner-list
+  const winnerEl = document.getElementById("winner-list");
+  let draggingWinner = false;
+  let offsetWinnerX = 0;
+  let offsetWinnerY = 0;
+
+  winnerEl.addEventListener("mousedown", function (e) {
+    if (localStorage.getItem("lockWinner") === "true") return; // 锁定时不允许拖动
+    draggingWinner = true;
+    const rect = winnerEl.getBoundingClientRect();
+    offsetWinnerX = e.clientX - rect.left;
+    offsetWinnerY = e.clientY - rect.top;
+  });
+
+  document.addEventListener("mousemove", function (e) {
+    if (draggingWinner) {
+      const x = e.clientX - offsetWinnerX;
+      const y = e.clientY - offsetWinnerY;
+      winnerEl.style.position = "absolute";
+      winnerEl.style.left = x + "px";
+      winnerEl.style.top = y + "px";
+
+      localStorage.setItem("winnerOffsetX", x);
+      localStorage.setItem("winnerOffsetY", y);
+
+      if (adminWindow && !adminWindow.closed) {
+        adminWindow.postMessage({ type: "winnerMoved", payload: { x, y } }, "*");
+      }
+    }
+  });
+
+  document.addEventListener("mouseup", function () {
+    draggingWinner = false;
+  });
+
+  </script>
   
-   <div class="section">
-	<button onclick="window.open('name.html', 'NameList', 'width=400,height=600')">📋 查看当前名单</button>
-  </div>
+  <style>
+  .main-header {
+    display: none !important;
+  }
+</style>
 
-  <div class="section">
-    <button onclick="sendRemoveAllNames()">🗑️ 清除全部名字</button>
-	<br><br>
-	<label>上传名单(.txt) </label>
-    <input type="file" id="nameListUpload" accept=".txt" onchange="handleNameFile()" />
-    <button onclick="sendExportNames()">📤 导出名单</button>
-  </div>
-  
-  <hr />
-  
-  <div class="section">
-	  <label for="bgUpload">🖼️ 上传背景图</label>
-	  <input type="file" id="bgUpload" accept="image/*" onchange="handleBgUpload()" />
-  </div>
-
-  <hr />
-	<h3>🎨 样式控制</h3>
-  <div class="section">
-    <label>🏆 中奖名单字体颜色:</label>
-    <input type="color" id="winnerColorInput" oninput="sendWinnerColor()" />
-  </div>
-
-  <div class="section">
-    <label>✨ 抽奖字体颜色:</label>
-    <input type="color" id="flashColorInput" oninput="sendFlashColor()" />
-  </div>
-
-  <hr />
-
-  <div class="section">
-    <h3>🧲 抽奖文字位置</h3>
-    <button onclick="toggleFlashLock()" id="flashLockBtn">🔓 解锁</button>
-  </div>
-
-  <div class="section">
-    <h3>🧲 Winner List 位置</h3>
-    <button onclick="toggleWinnerLock()" id="winnerLockBtn">🔓 解锁</button>
-  </div>
-
-  <hr />
-
-  <div class="section">
-    <button onclick="sendClearWinners()">🧹 清除中奖名单</button>
-    <button onclick="sendSpin()">🎲 开始抽奖</button>
-  </div>
-
-  <script src="admin.js"></script>
 </body>
 </html>
