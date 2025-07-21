@@ -2,34 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lucky Draw Admin Panel</title>
   <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
   <h2>🎛️ Admin Panel</h2>
 
+	<h3>📄 名单管理</h3>
   <div class="section">
     <label for="nameInput">👤 添加名字</label>
     <input type="text" id="nameInput" placeholder="输入名字按 Enter 添加" />
     <div id="duplicateWarning" class="warning"></div>
   </div>
+  
+   <div class="section">
+	<button onclick="window.open('name.html', 'NameList', 'width=400,height=600')">📋 查看当前名单</button>
+  </div>
 
   <div class="section">
     <button onclick="sendRemoveAllNames()">🗑️ 清除全部名字</button>
+	<br><br>
+	<label>上传名单(.txt) </label>
     <input type="file" id="nameListUpload" accept=".txt" onchange="handleNameFile()" />
     <button onclick="sendExportNames()">📤 导出名单</button>
   </div>
-
+  
+  <hr />
+  
   <div class="section">
-    <label>📝 页面标题</label>
-    <input type="text" id="titleInput" placeholder="输入标题文字后按 Enter" />
+	  <label for="bgUpload">🖼️ 上传背景图</label>
+	  <input type="file" id="bgUpload" accept="image/*" onchange="handleBgUpload()" />
   </div>
 
-  <div class="section">
-    <label>🎨 页面标题颜色:</label>
-    <input type="color" id="titleColorInput" oninput="sendTitleColor()" />
-  </div>
-
+  <hr />
+	<h3>🎨 样式控制</h3>
   <div class="section">
     <label>🏆 中奖名单字体颜色:</label>
     <input type="color" id="winnerColorInput" oninput="sendWinnerColor()" />
