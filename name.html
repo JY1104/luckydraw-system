@@ -1,0 +1,47 @@
+<!-- name.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>当前名单</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #fdfdfd;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      padding: 4px 0;
+      border-bottom: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 当前名单</h2>
+  <ul id="nameList"></ul>
+
+  <script>
+    function loadNames() {
+      const names = JSON.parse(localStorage.getItem("names") || "[]");
+      const ul = document.getElementById("nameList");
+      ul.innerHTML = "";
+      names.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        ul.appendChild(li);
+      });
+    }
+
+    // 初始加载 + 每秒刷新（live）
+    loadNames();
+    setInterval(loadNames, 1000);
+  </script>
+</body>
+</html>
