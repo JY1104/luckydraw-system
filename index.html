@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <button class="admin-toggle-btn" onclick="openAdminWindow()">🔧 Admin Panel</button>
+  <button class="admin-toggle-btn" onclick="openAdminWindow()">🔧</button>
 
   <header class="main-header">
     <h1>Lucky Draw Flash</h1>
@@ -18,11 +18,10 @@
     <ul></ul>
   </div>
 
-  <div id="flashNameDisplay">点击开始抽奖</div>
+  <div id="flashContainer">
+	<div id="flashNameDisplay">幸运儿</div>
+  </div>
 
-  <audio id="bgMusic" loop>
-    <source src="music/background.mp3" type="audio/mpeg" />
-  </audio>
 
   <div id="customPopup" class="popup hidden">
     <div class="popup-content">
@@ -117,6 +116,14 @@
   document.addEventListener("mouseup", function () {
     draggingWinner = false;
   });
+
   </script>
+  
+  <style>
+  .main-header {
+    display: none !important;
+  }
+</style>
+
 </body>
 </html>
