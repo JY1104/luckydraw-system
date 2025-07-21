@@ -35,6 +35,11 @@ function sendMessage(type, payload) {
   }
 }
 
+function postToMain(type, payload = null) {
+  window.parent.postMessage({ type, payload }, "*");
+}
+
+
 // 插入名字
 function sendInsertName() {
   const name = document.getElementById("nameInput").value.trim();
@@ -82,18 +87,6 @@ function sendClearWinners() {
   if (confirm("确认清除中奖名单？")) {
     sendMessage("clearWinners");
   }
-}
-
-// 设置标题
-function sendSetTitle() {
-  const title = document.getElementById("titleInput").value.trim();
-  if (title) sendMessage("setTitle", title);
-}
-
-// 设置标题颜色
-function sendTitleColor() {
-  const color = document.getElementById("titleColorInput").value;
-  sendMessage("setTitleColor", color);
 }
 
 // 设置中奖名单字体颜色
@@ -170,13 +163,9 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // 监听 Enter 键
-document.getElementById("titleInput").addEventListener("keydown", function (event) {
-  if (event.key === "Enter") {
-    sendSetTitle();
-  }
-});
 document.getElementById("nameInput").addEventListener("keydown", function (event) {
   if (event.key === "Enter") {
     sendInsertName();
   }
 });
+
